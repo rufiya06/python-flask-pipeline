@@ -6,14 +6,17 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Installing dependencies...'
-                sh 'python3 -m pip install --user -r requirements.txt'
+                sh '''
+                    python3 -m venv .venv
+                    .venv/bin/python -m pip install -r requirements.txt
+                '''
             }
         }
 
         stage('Test') {
             steps {
                 echo 'Running unit tests...'
-                sh 'python3 -m unittest discover -s .'
+                sh '.venv/bin/python -m unittest discover -s .'
             }
         }
 
@@ -32,7 +35,7 @@ pipeline {
                 echo 'Starting application...'
                 sh '''
                     cd ${WORKSPACE}/python-app-deploy
-                    nohup python3 app.py > app.log 2>&1 &
+                    nohup ${WORKSPACE}/.venv/bin/python app.py > app.log 2>&1 &
                     echo $! > app.pid
                 '''
             }
@@ -41,7 +44,7 @@ pipeline {
         stage('Test Application') {
             steps {
                 echo 'Testing application...'
-                sh 'python3 ${WORKSPACE}/test_app.py'
+                sh '${WORKSPACE}/.venv/bin/python ${WORKSPACE}/test_app.py'
             }
         }
     }
